@@ -47,6 +47,15 @@ const io = socketio(server, {
 let players = {}
 
 io.on('connection', (socket) => {
+
+    // Limitar a 5 jugadores concurrentes
+    if (Object.keys(players).length >= 5) {
+        console.log(`❌ Límite de jugadores alcanzado. Rechazando conexión: ${socket.id}`);
+        socket.emit('connection-denied', { message: 'Límite de jugadores alcanzado. Intenta más tarde.' });
+        socket.disconnect(true);
+        return;
+    }
+
     console.log(`🟢 Usuario conectado: ${socket.id}`)
 
     socket.on('new-player', (data) => {
@@ -82,6 +91,9 @@ io.on('connection', (socket) => {
 
         socket.emit('existing-players', others)
 
+        // Mostrar en consola el número de jugadores conectados
+        console.log(`👥 Jugadores conectados: ${Object.keys(players).length}`);
+
     })
 
     socket.on('update-position', ({ position, rotation }) => {
@@ -106,6 +118,9 @@ io.on('connection', (socket) => {
       
         // 🟡 Opcional: actualizar la lista completa
         io.emit('players-update', players)
+
+        // Mostrar en consola el número de jugadores conectados
+        console.log(`👥 Jugadores conectados: ${Object.keys(players).length}`);
       })
       
 })
