@@ -360,12 +360,14 @@ export default class World {
 
         // Sonidos
         this.coinSound = new Sound('/sounds/coin.ogg')
-        this.ambientSound = new AmbientSound('/sounds/ambiente.mp3')
+        this.ambientSound = new AmbientSound('/sounds/HaloThemeSong.mp3')
         this.winner = new Sound('/sounds/winner.mp3')
         this.portalSound = new Sound('/sounds/xbox.mp3')
 
         this.allowPrizePickup = false
         this.hasMoved = false
+
+        this.totalPoints = 0;
 
         // Permitimos recoger premios tras 2s
         setTimeout(() => {
@@ -535,6 +537,36 @@ export default class World {
                     this.loader.prizes.splice(idx, 1);
                 }
 
+                // if (prize.role === "default") {
+                //     this.points = (this.points || 0) + 1;
+                //     this.robot.points = this.points;
+
+                //     const pointsTarget = this.levelManager.getCurrentLevelTargetPoints();
+                //     console.log(`🎯 Monedas recolectadas: ${this.points} / ${pointsTarget}`);
+
+                //     // Hacer visible el coin final cuando se recojan exactamente 2 monedas
+                //     if (!this.finalPrizeActivated && this.points === 2) {
+                //         const finalCoin = this.loader.prizes.find(p => p.role === "finalPrize");
+                //         if (finalCoin && !finalCoin.collected) {
+                //             finalCoin.pivot.visible = true;
+                //             this.finalPrizeActivated = true;
+
+                //             new FinalPrizeParticles({
+                //                 scene: this.scene,
+                //                 targetPosition: finalCoin.pivot.position,
+                //                 sourcePosition: this.robot.body.position,
+                //                 experience: this.experience
+                //             });
+
+                //             if (window.userInteracted) {
+                //                 this.portalSound.play();
+                //             }
+
+                //             console.log("🪙 Coin final activado correctamente.");
+                //         }
+                //     }
+                // }
+
                 if (prize.role === "default") {
                     this.points = (this.points || 0) + 1;
                     this.robot.points = this.points;
@@ -549,6 +581,59 @@ export default class World {
                             finalCoin.pivot.visible = true;
                             this.finalPrizeActivated = true;
 
+                            // --- Limpiar objetos visuales anteriores ---
+                            if (this.finalPrizeArrow) {
+                                this.scene.remove(this.finalPrizeArrow);
+                                this.finalPrizeArrow = null;
+                            }
+                            if (this.finalPrizeLight) {
+                                this.scene.remove(this.finalPrizeLight);
+                                this.finalPrizeLight = null;
+                            }
+                            if (this.finalPrizeSpinner) {
+                                this.scene.remove(this.finalPrizeSpinner);
+                                this.finalPrizeSpinner = null;
+                            }
+
+                            // --- Atenuar la luz ambiental ---
+                            if (this.environment && this.environment.ambientLight) {
+                                this.environment.ambientLight.intensity = 0.2; // Ajusta según tu escena
+                            }
+
+                            // --- Flecha apuntando hacia abajo ---
+                            const arrowDir = new THREE.Vector3(0, -1, 0); // Apunta hacia abajo
+                            const arrowLength = 2.5;
+                            const arrowColor = 0xffff00;
+                            this.finalPrizeArrow = new THREE.ArrowHelper(
+                                arrowDir,
+                                finalCoin.pivot.position.clone().add(new THREE.Vector3(0, 8, 0)), // Un poco arriba del coin
+                                arrowLength,
+                                arrowColor,
+                                1, // headLength
+                                0.7 // headWidth
+                            );
+                            this.scene.add(this.finalPrizeArrow);
+
+                            // --- Luz puntual en la flecha ---
+                            this.finalPrizeLight = new THREE.PointLight(0xffff00, 3, 8);
+                            this.finalPrizeLight.position.copy(finalCoin.pivot.position).add(new THREE.Vector3(0, 8, 0));
+                            this.scene.add(this.finalPrizeLight);
+
+                            // --- Objeto giratorio (anillo) sobre el coin ---
+                            const ringGeometry = new THREE.TorusGeometry(1.1, 0.15, 16, 100);
+                            const ringMaterial = new THREE.MeshBasicMaterial({ color: 0xffff00, emissive: 0xffff00 });
+                            this.finalPrizeSpinner = new THREE.Mesh(ringGeometry, ringMaterial);
+                            this.finalPrizeSpinner.position.copy(finalCoin.pivot.position).add(new THREE.Vector3(0, 6.5, 0));
+                            this.scene.add(this.finalPrizeSpinner);
+
+                            // --- Animación de giro ---
+                            this.experience.time.on('tick', () => {
+                                if (this.finalPrizeSpinner) {
+                                    this.finalPrizeSpinner.rotation.y += 0.07;
+                                }
+                            });
+
+                            // --- Partículas y sonido ---
                             new FinalPrizeParticles({
                                 scene: this.scene,
                                 targetPosition: finalCoin.pivot.position,
@@ -566,16 +651,26 @@ export default class World {
                 }
 
                 if (prize.role === "finalPrize") {
+                    // Sumar los puntos de este nivel al total
+                    this.totalPoints += this.points || 0;
+
                     console.log("🚪 Coin final recogido. Pasando al siguiente nivel...");
                     if (this.levelManager.currentLevel < this.levelManager.totalLevels) {
                         this.levelManager.nextLevel();
                         this.points = 0;
                         this.robot.points = 0;
+
+                        // Actualizar HUD
+                        this.experience.menu.setLevel?.(this.levelManager.currentLevel);
+                        this.experience.menu.setTotalPoints?.(this.totalPoints);
                     } else {
                         console.log('🏁 Completaste el último nivel, terminando partida...');
                         const elapsed = this.experience.tracker.stop();
                         this.experience.tracker.saveTime(elapsed);
                         this.experience.tracker.showEndGameModal(elapsed);
+
+                        // Mostrar puntos totales en el HUD
+                        this.experience.menu.setTotalPoints?.(this.totalPoints);
 
                         this.experience.obstacleWavesDisabled = true;
                         clearTimeout(this.experience.obstacleWaveTimeout);

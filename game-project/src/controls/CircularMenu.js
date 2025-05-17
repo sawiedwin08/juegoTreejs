@@ -154,6 +154,46 @@ export default class CircularMenu {
     })
     document.body.appendChild(this.playersLabel)
 
+    // HUD: Nivel actual
+    this.levelLabel = document.createElement('div')
+    this.levelLabel.id = 'hud-level'
+    this.levelLabel.innerText = '🗺️ Nivel: 1'
+    Object.assign(this.levelLabel.style, {
+      position: 'fixed',
+      top: '16px',
+      left: '308px',
+      fontSize: '16px',
+      fontWeight: 'bold',
+      background: 'rgba(0,0,0,0.6)',
+      color: 'white',
+      padding: '6px 12px',
+      borderRadius: '8px',
+      zIndex: 9999,
+      fontFamily: 'monospace',
+      pointerEvents: 'none'
+    })
+    document.body.appendChild(this.levelLabel)
+
+    // HUD: Puntos totales
+    this.totalPointsLabel = document.createElement('div')
+    this.totalPointsLabel.id = 'hud-total-points'
+    this.totalPointsLabel.innerText = '🏆 Total: 0'
+    Object.assign(this.totalPointsLabel.style, {
+      position: 'fixed',
+      top: '16px',
+      right: '180px',
+      fontSize: '16px',
+      fontWeight: 'bold',
+      background: 'rgba(0,0,0,0.6)',
+      color: 'gold',
+      padding: '6px 12px',
+      borderRadius: '8px',
+      zIndex: 9999,
+      fontFamily: 'monospace',
+      pointerEvents: 'none'
+    })
+    document.body.appendChild(this.totalPointsLabel)
+
   }
 
   //Mostrar modal acerca de
@@ -248,12 +288,29 @@ export default class CircularMenu {
       this.playersLabel.innerText = `👥 Jugadores: ${count}`
     }
   }
-  
+
+  setLevel(level) {
+    if (this.levelLabel) this.levelLabel.innerText = `🗺️ Nivel: ${level}`
+  }
+
+  setTotalPoints(total) {
+    if (this.totalPointsLabel) this.totalPointsLabel.innerText = `🏆 Total: ${total}`
+  }
+
 
   destroy() {
     this.toggleButton?.remove()
     this.actionButtons?.forEach(btn => btn.remove())
     this.timer?.remove()
     this.status?.remove()
+    this.playersLabel?.remove()
+    this.levelLabel?.remove()
+    this.totalPointsLabel?.remove()
+    this.aboutContainer?.remove()
+    this.aboutContainer = null
+    this.actionButtons = []
+    this.isOpen = false
+    this.container = null
+    this.vrIntegration = null
   }
 }
