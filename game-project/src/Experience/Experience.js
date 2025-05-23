@@ -47,7 +47,7 @@ export default class Experience {
     // Recursos
     this.resources = new Resources(sources)
 
-    // Cámara y renderer
+   
     this.camera = new Camera(this)
     this.renderer = new Renderer(this)
 
