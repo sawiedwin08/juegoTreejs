@@ -52,7 +52,7 @@ export default class Experience {
     this.renderer = new Renderer(this)
 
     // Socket
-    //this.socketManager = new SocketManager(this)
+    this.socketManager = new SocketManager(this)
 
     // Raycaster
     this.raycaster = new Raycaster(this)
@@ -210,7 +210,7 @@ export default class Experience {
 
     this.socketManager?.update()
     //linea para activar el debugger
-    if (this.debugger) this.debugger.update()
+    // if (this.debugger) this.debugger.update()
   }
 
   adjustCameraForVR() {
