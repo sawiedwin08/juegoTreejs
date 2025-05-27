@@ -8,7 +8,7 @@ exports.getBlocks = async (req, res) => {
 
         res.json(blocks);
     } catch (error) {
-        res.status(500).json({ message: 'Error al obtener bloques', error });
+        res.status(500).json({ message: 'Error al obteniendo bloques', error });
     }
 };
 
@@ -20,7 +20,7 @@ exports.addBlock = async (req, res) => {
     const newBlock = new Block({ name, x, y, z, level, rol });
     await newBlock.save();
 
-    res.status(201).json({ message: 'Bloque guardado', block: newBlock });
+    res.status(201).json({ message: 'Se ha guardado un bloque exitosamente', block: newBlock });
 }
 
 
@@ -28,5 +28,5 @@ exports.addBlock = async (req, res) => {
 exports.addMultipleBlocks = async (req, res) => {
     const blocks = req.body // array [{ x, y, z }, ...]
     await Block.insertMany(blocks)
-    res.status(201).json({ message: 'Bloques guardados', count: blocks.length })
+    res.status(201).json({ message: 'Bloques guardados exitosamente', count: blocks.length })
 }
